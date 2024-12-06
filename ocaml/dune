@@ -1,0 +1,3 @@
+(library
+ (name AOC24)
+ (libraries containers base batteries))
