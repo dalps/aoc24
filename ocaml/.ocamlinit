@@ -1,6 +1,8 @@
 open AOC24
 open Day1
 open CCList
+module P = CCParse
+open P
 
 let read_file (filename : string) : string =
   let fd = open_in filename in

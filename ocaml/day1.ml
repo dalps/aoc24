@@ -16,12 +16,11 @@ let distance (xs, ys) =
 let similarity_score (xs, ys) =
   fold_left (fun acc x -> (x * (filter (Int.equal x) ys |> length)) + acc) 0 xs
 
-let parse_int_pair_list =
-  CCParse.U.(
-    list ~start:"" ~stop:"" ~sep:""
-      (pair ~start:"" ~stop:"" ~sep:"" int int))
+let parse =
+  let module P = CCParse in
+  P.parse_file (P.each_line (P.both (U.int <* many space) (U.int <* many space)))
 
 let solve (input : string) op =
   let open CCResult in
-  let* res = parse_file parse_containers input in
+  let* res = parse input in
   res |> split |> op |> return
