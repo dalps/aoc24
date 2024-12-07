@@ -60,7 +60,6 @@ let mull_it_over = CCList.fold_left (fun acc (x, y) -> acc + (x * y)) 0
 
 let solve1 =
   let open CCFun in
-  let open CCList in
   get_pairs %> mull_it_over
 
 let solve2 =
