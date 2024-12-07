@@ -110,5 +110,5 @@ let search2 (b : char list list) =
   |> keep_some
 
 let b = parse_board "day4.input";;
-b |> search1 |> L.length;;
-b |> search2 |> L.length (* 1st: 17160; 2nd: 2145 *)
+(* b |> search1 |> L.length;;
+b |> search2 |> L.length 1st: 17160; 2nd: 2145 *)
