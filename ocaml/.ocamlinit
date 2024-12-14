@@ -1,11 +1,8 @@
 open AOC24
-open Day1
-module L = CCList
-module P = CCParse
-open P
+open Utils
+open Coord
 open L
 
-let read_file (filename : string) : string =
-  let fd = open_in filename in
-  let s = really_input_string fd (in_channel_length fd) in
-  close_in fd; s
+#require "ppx_deriving.show";;
+let pf p f = P.parse_file p f |> R.get_exn;;
+#use "day12.ml";;

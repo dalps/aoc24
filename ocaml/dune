@@ -1,3 +1,4 @@
 (library
  (name AOC24)
- (libraries containers base batteries re))
+ (preprocess (pps ppx_deriving.show ppx_deriving.ord))
+ (libraries gg containers zarith iter ocamlgraph re))
