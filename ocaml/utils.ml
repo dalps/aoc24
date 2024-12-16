@@ -12,6 +12,9 @@ let spr = Pr.sprintf
 
 open F
 
+let data_folder = "/home/dalpi/aoc24/ocaml/data/"
+let data x = "/home/dalpi/aoc24/ocaml/data/" ^ x
+
 let get_input (p : 'a P.t) (f : string) = P.parse_file p f |> R.get_or_failwith
 
 let read_file (filename : string) : string =
@@ -58,8 +61,7 @@ let rec fold_left_w3 (f : 'acc -> 'a -> 'a -> 'a -> 'acc) (accu : 'acc) =
   | x0 :: x1 :: x2 :: xs -> fold_left_w3 f (f accu x0 x1 x2) (x1 :: x2 :: xs)
 
 module Coord = struct
-  type t = { x : int; y : int }
-  [@@deriving show]
+  type t = { x : int; y : int } [@@deriving show]
 
   let make x y : t = { x; y }
   let v x y : t = { x; y }
@@ -74,6 +76,8 @@ module Coord = struct
   let hash p = CCHash.(pair int int) (p.x, p.y)
 
   let ( *. ) a p = v (a * p.x) (a * p.y)
+  let ( /. ) p a = v (p.x / a) (p.y / a)
+  let ( % ) p m = v (p.x mod m.x) (p.y mod m.y)
   let ( * ) p1 p2 = (p1.x * p2.x) + (p1.y * p2.y)
   let ( + ) p1 p2 = v (p1.x + p2.x) (p1.y + p2.y)
   let ( - ) p1 p2 = v (p1.x - p2.x) (p1.y - p2.y)
@@ -83,10 +87,13 @@ module Coord = struct
   let south = -1 *. north
   let west = -1 *. east
 
+  let compass = [| north; east; south; west |]
   let compass0 = [ north; east; south; west ]
   let compass1 = [ (`N, north); (`E, east); (`S, south); (`W, west) ]
   let compass2 = [ `N north; `E east; `S south; `W west ]
 end
+
+module P2 = Coord
 
 module ListMatrix = struct
   type 'a t = 'a list list
@@ -96,6 +103,8 @@ module ListMatrix = struct
     let* _ = assume (i >= 0 && j >= 0) in
     let* xs = L.nth_opt board j in
     L.nth_opt xs i
+
+  let get' (board : 'a t) (p : P2.t) : 'a option = get board p.x p.y
 
   let remove_empty_rows (t : 'a list list) : 'a list list =
     L.filter (not % L.is_empty) t
@@ -145,11 +154,15 @@ module ArrayMatrix = struct
     let* xs = A.get_safe board j in
     A.get_safe xs i
 
+  let ( .-() ) (board : 'a t) (p : P2.t) : 'a option = get board p.x p.y
+
   let set (board : 'a t) i j x : unit =
     if O.is_some (get board i j) then
       board.(j).(i) <- x
     else
       ()
+
+  let ( .-()<- ) (board : 'a t) (p : P2.t) (a : 'a) : unit = set board p.x p.y a
 
   let find (p : 'a -> bool) (board : 'a t) =
     let open A in
@@ -160,6 +173,16 @@ module ArrayMatrix = struct
   let print ~(print_a : 'a -> unit) = A.iter (print_newline % A.iter print_a)
 
   let of_list (t : 'a list list) : 'a t = t |> A.of_list %> A.map A.of_list
+
+  let find_mapij f = A.find_mapi (A.find_mapi % fun x y -> f y x)
+  let foldij (f : 'b -> int -> int -> 'a -> 'b) =
+    A.foldi (fun acc1 j xs -> A.foldi (fun acc2 i x -> f acc2 i j x) acc1 xs)
+  let mapij f = A.mapi (A.mapi % fun x y -> f y x)
+  let iterij f = A.iteri (A.iteri % fun x y -> f y x)
+  let filter_mapij f =
+    foldij
+      (fun acc i j x -> match f i j x with Some x -> x :: acc | None -> acc)
+      []
 end
 
 module LM = ListMatrix
