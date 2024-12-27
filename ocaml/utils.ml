@@ -5,6 +5,7 @@ module P = CCParse
 module R = CCResult
 module A = CCArray
 module F = CCFun
+module C = CCChar
 module Pr = Printf
 
 let pr = Pr.printf
@@ -68,8 +69,7 @@ module Coord = struct
   let x (p : t) : int = p.x
   let y (p : t) : int = p.y
 
-  let to_string (c : t) = spr "{%d,%d}" c.x c.y
-  let pr (c : t) = pr "%s" (to_string c)
+  let show (c : t) = spr "{%d,%d}" c.x c.y
 
   let compare p1 p2 = CCOrd.(pair int int) (p1.x, p1.y) (p2.x, p2.y)
   let equal p1 p2 = Int.(equal p1.x p2.x && equal p1.y p2.y)
@@ -81,16 +81,62 @@ module Coord = struct
   let ( * ) p1 p2 = (p1.x * p2.x) + (p1.y * p2.y)
   let ( + ) p1 p2 = v (p1.x + p2.x) (p1.y + p2.y)
   let ( - ) p1 p2 = v (p1.x - p2.x) (p1.y - p2.y)
+  let ( =. ) = equal
+
+  let ortho p = v (-p.y) p.x
+  let flipx p = { p with x = -p.x }
+  let flipy p = { p with y = -p.y }
+  let flip p = -1 *. p
+  let norm2 p = CCInt.((p.x ** 2) + p.y + 2)
+  let norm p : float = Float.(sqrt ((of_int p.x ** 2.) +. (of_int p.y ** 2.)))
+  let leq p1 p2 = norm2 p1 <= norm2 p2
+  let ( <= ) = leq
+
+  let aligned (points : t list) =
+    match points with
+    | p1 :: p2 :: rest ->
+        let line = p2 - p1 in
+        let rec check accu = function
+          | p1 :: p2 :: rest ->
+              let d = p2 - p1 in
+              check (ortho d * line = 0 && accu) (p2 :: rest)
+          | _ -> accu
+        in
+        check true (p2 :: rest)
+    | _ -> true
+
+  let%test "aligned_1" = aligned [ make 0 0; make 0 1; make 0 2 ]
+  let%test "aligned_1" = aligned [ make 1 0; make 4 0; make 9 0; make 42 0 ]
+  let%test "aligned_1" =
+    let line = make 1 3 in
+    aligned [ 2 *. line; -1 *. line; 42 *. line; 3 *. line ]
 
   let north = make 0 (-1)
   let east = make 1 0
   let south = -1 *. north
   let west = -1 *. east
 
+  let string_of_dir d =
+    if d =. north then
+      "north"
+    else if d =. east then
+      "east"
+    else if d =. south then
+      "south"
+    else if d =. west then
+      "west"
+    else
+      failwith "[coord] Not a direction"
+
   let compass = [| north; east; south; west |]
   let compass0 = [ north; east; south; west ]
   let compass1 = [ (`N, north); (`E, east); (`S, south); (`W, west) ]
   let compass2 = [ `N north; `E east; `S south; `W west ]
+
+  let of_pair = uncurry make
+  let of_list = function
+    | x :: y :: _ -> make x y
+    | _ -> failwith "[coord] Not enough values"
 end
 
 module P2 = Coord
@@ -179,10 +225,23 @@ module ArrayMatrix = struct
     A.foldi (fun acc1 j xs -> A.foldi (fun acc2 i x -> f acc2 i j x) acc1 xs)
   let mapij f = A.mapi (A.mapi % fun x y -> f y x)
   let iterij f = A.iteri (A.iteri % fun x y -> f y x)
+  let iterp f = iterij (fun i j -> f (Coord.make i j))
   let filter_mapij f =
     foldij
       (fun acc i j x -> match f i j x with Some x -> x :: acc | None -> acc)
       []
+
+  let print_board ~print_a board =
+    let open A in
+    print_string "   ";
+    iter print_int (0 --^ 10);
+    iter print_int (0 --^ 10);
+    print_newline ();
+    iteri
+      (fun i row ->
+        Printf.printf "%2d %s\n" i
+        @@ fold_left (fun acc col -> acc ^ print_a col) "" row)
+      board
 end
 
 module LM = ListMatrix
@@ -225,3 +284,13 @@ let int_of_digits ds =
     | d :: ds -> (d * (10 ** mul)) + go (mul - 1) ds
   in
   go (L.length ds - 1) ds
+
+type 'a quadtree =
+  | Leaf : 'a -> 'a quadtree
+  | Quad : {
+      tl : 'a quadtree;
+      tr : 'a quadtree;
+      br : 'a quadtree;
+      bl : 'a quadtree;
+    }
+      -> 'a quadtree
