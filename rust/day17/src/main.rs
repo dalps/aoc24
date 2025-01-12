@@ -69,9 +69,11 @@ struct Computer {
   reg_a: i32,
   reg_b: i32,
   reg_c: i32,
+  program: Vec<i32>,
   tape: Vec<Instr>,
   ip: usize,
-  output: String,
+  output: Vec<i32>,
+  hits: i32,
 }
 
 fn division(num: i32, den: i32) -> i32 {
@@ -84,16 +86,16 @@ fn division(num: i32, den: i32) -> i32 {
 }
 
 impl Computer {
-  fn new(reg_a: i32, reg_b: i32, reg_c: i32, input: Vec<i32>) -> Self {
-    let output = String::new();
+  fn new(reg_a: i32, reg_b: i32, reg_c: i32, program: Vec<i32>) -> Self {
+    let output = Vec::new();
 
-    if input.len() % 2 != 0 {
+    if program.len() % 2 != 0 {
       panic!("Odd length: last instruction is missing an operand")
     }
 
     let mut tape: Vec<Instr> = Vec::new();
 
-    for chunk in input.chunks(2) {
+    for chunk in program.chunks(2) {
       tape.push(Instr::encode(chunk[0], chunk[1]));
     }
 
@@ -105,6 +107,8 @@ impl Computer {
       output,
       ip,
       tape,
+      program,
+      hits: 0,
     }
   }
 
@@ -114,14 +118,14 @@ impl Computer {
 
       // state.exec(instr); // I don't get it
 
-      println!("* Running {instr:?}");
+      // println!("* Running {instr:?}");
       match instr {
         Instr::Adv(op) => {
-          println!(
-            "Numerator: {}, Denominator: {}",
-            self.reg_a,
-            op.decode(&self)
-          );
+          // println!(
+          //   "Numerator: {}, Denominator: {}",
+          //   self.reg_a,
+          //   op.decode(&self)
+          // );
           self.reg_a = division(self.reg_a, op.decode(&self));
         }
         Instr::Bdv(op) => {
@@ -143,36 +147,52 @@ impl Computer {
         Instr::Out(op) => {
           let out = op.decode(&self) % 8;
 
-          if !self.output.is_empty() {
-            self.output.push(',');
+          if out != self.program[self.hits as usize] {
+            // println!("Hits: {}, Output: {}", self.hits, self.collect_output());
+            break
           }
-
-          self.output.push_str(&out.to_string());
+          
+          self.output.push(out);
+          self.hits += 1;
         }
       }
 
-      println!("{self:?}");
+      // println!("{self:?}");
     }
+  }
+
+  fn collect_output(&self) -> String {
+    let output_string: Vec<_> = self.output.iter().map(|i| i.to_string()).collect();
+    output_string.join(",")
   }
 }
 
 fn main() {
-  let mut state = Computer::new(
-    61657405,
-    0,
-    0,
-    vec![2, 4, 1, 2, 7, 5, 4, 3, 0, 3, 1, 7, 5, 5, 3, 0],
-  );
+  let mut result = 0;
 
-  state.exec();
-  println!("{}", state.output);
+  for reg_a in 61657405..std::i32::MAX {
+    let mut state = Computer::new(
+      reg_a,
+      0,
+      0,
+      vec![2, 4, 1, 2, 7, 5, 4, 3, 0, 3, 1, 7, 5, 5, 3, 0],
+    );
+    
+    state.exec();
+    if state.collect_output() == String::from("2,4,1,2,7,5,4,3,0,3,1,7,5,5,3,0") {
+      result = state.reg_a;
+      break;
+    }
+  }
+
+  println!("This is not going to cut it: {result}",);
 }
 
 #[test]
 fn test_0() {
   let mut c = Computer::new(729, 0, 0, vec![0, 1, 5, 4, 3, 0]); // adv 1; out A; jnz 0
   c.exec();
-  assert_eq!(c.output, String::from("4,6,3,5,6,3,5,2,1,0"));
+  assert_eq!(c.collect_output(), String::from("4,6,3,5,6,3,5,2,1,0"));
 }
 
 #[test]
@@ -186,13 +206,14 @@ fn test_1() {
 fn test_2() {
   let mut c = Computer::new(10, 0, 0, vec![5, 0, 5, 1, 5, 4]);
   c.exec();
-  assert_eq!(c.output, String::from("0,1,2"));
+  assert_eq!(c.collect_output(), String::from("0,1,2"));
 }
+
 #[test]
 fn test_3() {
   let mut c = Computer::new(2024, 0, 0, vec![0, 1, 5, 4, 3, 0]);
   c.exec();
-  assert_eq!(c.output, String::from("4,2,5,6,7,7,7,7,3,1,0"));
+  assert_eq!(c.collect_output(), String::from("4,2,5,6,7,7,7,7,3,1,0"));
   assert_eq!(c.reg_a, 0);
 }
 
@@ -208,4 +229,11 @@ fn test_5() {
   let mut c = Computer::new(0, 2024, 43690, vec![4, 0]);
   c.exec();
   assert_eq!(c.reg_b, 44354);
+}
+
+#[test]
+fn test_6() {
+  let mut c = Computer::new(117440, 0, 0, vec![0, 3, 5, 4, 3, 0]);
+  c.exec();
+  assert_eq!(c.collect_output(), String::from("0,3,5,4,3,0"));
 }
