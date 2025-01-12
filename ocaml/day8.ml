@@ -48,7 +48,7 @@ let plot_two_antinodes board =
   let dx, dy = (p2.x - p1.x, p2.y - p1.y) in
   (* vector from p1 to p2 *)
   if not (dx = 0 && dy = 0) then (
-    pr "%c: %s %s\n" c (Coord.to_string p1) (Coord.to_string p2);
+    pr "%c: %s %s\n" c (Coord.show p1) (Coord.show p2);
     AM.set board (p1.x - dx) (p1.y - dy) '#';
     AM.set board (p2.x + dx) (p2.y + dy) '#');
   pure ()
@@ -59,10 +59,10 @@ let trace board ?(forward = true) ~(start : Coord.t) ~(direction : Coord.t) () =
   let rec go (p : Coord.t) =
     if O.is_some @@ AM.get board p.x p.y then (
       AM.set board p.x p.y '#';
-      Utils.pr "--%s" (to_string p);
+      Utils.pr "--%s" (show p);
       go (p + d))
   in
-  pr start;
+  print_endline @@ show start;
   AM.set board start.x start.y '#';
   go (start + d);
   print_newline ()
@@ -77,7 +77,7 @@ let plot_many_antinodes board =
   let d = Coord.make (p2.x - p1.x) (p2.y - p1.y) in
   (* vector from p1 to p2 *)
   if not (d.x = 0 && d.y = 0) then (
-    pr "%c: %s %s\n" c (Coord.to_string p1) (Coord.to_string p2);
+    pr "%c: %s %s\n" c (Coord.show p1) (Coord.show p2);
     trace board ~forward:true ~start:p1 ~direction:d ();
     trace board ~forward:false ~start:p1 ~direction:d ());
   pure ()
@@ -94,6 +94,4 @@ let solve2 input =
   let dict = get_dict board in
   L.(length (assoc ~eq:Char.equal '#' dict))
 
-let b = get_input p "8.txt" |> LM.remove_empty_rows |> AM.of_list;;
-
-solve2 "day8.input"
+let b = get_input p (data "8.txt") |> LM.remove_empty_rows |> AM.of_list;;

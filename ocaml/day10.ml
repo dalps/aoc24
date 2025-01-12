@@ -63,7 +63,7 @@ let build_graph m =
     m;
   g
 
-let levels = get_topo "10.txt"
+let levels = get_topo (data "10.txt")
 let g = build_graph levels
 
 let solve1 input =
@@ -110,6 +110,3 @@ let solve2 input =
 let print_edges =
   GTrail.iter_edges (fun v1 v2 ->
       pr "%s->%s\n" (Level.to_string v1) (Level.to_string v2))
-;;
-
-print_edges g

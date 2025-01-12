@@ -1,9 +1,4 @@
-module L = CCList
-module O = CCOption
-module P = CCParse
-module R = CCResult
-module A = CCArray
-module F = CCFun
+open Utils
 
 type heading = N | E | S | W
 type tile = F | B | G | X of heading list | O
@@ -107,7 +102,7 @@ let solve1 input =
 
 let solve2 input =
   let open R in
-  let* board, p = get_board input in
+  let* board, _ = get_board input in
   pure
   @@
   let open A in
@@ -135,7 +130,7 @@ let solve2 input =
     0 board
 
 let l () =
-  P.parse_file p "6.txt" |> Result.get_ok
+  P.parse_file p (data "6.txt") |> Result.get_ok
   |> L.filter (( <> ) [])
   |> L.map A.of_list |> A.of_list
 

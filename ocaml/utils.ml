@@ -65,7 +65,7 @@ module Coord = struct
   type t = { x : int; y : int } [@@deriving show]
 
   let make x y : t = { x; y }
-  let v x y : t = { x; y }
+  let mk = make
   let x (p : t) : int = p.x
   let y (p : t) : int = p.y
 
@@ -75,15 +75,15 @@ module Coord = struct
   let equal p1 p2 = Int.(equal p1.x p2.x && equal p1.y p2.y)
   let hash p = CCHash.(pair int int) (p.x, p.y)
 
-  let ( *. ) a p = v (a * p.x) (a * p.y)
-  let ( /. ) p a = v (p.x / a) (p.y / a)
-  let ( % ) p m = v (p.x mod m.x) (p.y mod m.y)
+  let ( *. ) a p = mk (a * p.x) (a * p.y)
+  let ( /. ) p a = mk (p.x / a) (p.y / a)
+  let ( % ) p m = mk (p.x mod m.x) (p.y mod m.y)
   let ( * ) p1 p2 = (p1.x * p2.x) + (p1.y * p2.y)
-  let ( + ) p1 p2 = v (p1.x + p2.x) (p1.y + p2.y)
-  let ( - ) p1 p2 = v (p1.x - p2.x) (p1.y - p2.y)
+  let ( + ) p1 p2 = mk (p1.x + p2.x) (p1.y + p2.y)
+  let ( - ) p1 p2 = mk (p1.x - p2.x) (p1.y - p2.y)
   let ( =. ) = equal
 
-  let ortho p = v (-p.y) p.x
+  let ortho p = mk (-p.y) p.x
   let flipx p = { p with x = -p.x }
   let flipy p = { p with y = -p.y }
   let flip p = -1 *. p
@@ -91,6 +91,7 @@ module Coord = struct
   let norm p : float = Float.(sqrt ((of_int p.x ** 2.) +. (of_int p.y ** 2.)))
   let leq p1 p2 = norm2 p1 <= norm2 p2
   let ( <= ) = leq
+  let zero = make 0 0
 
   let aligned (points : t list) =
     match points with

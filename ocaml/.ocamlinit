@@ -1,8 +1,0 @@
-open AOC24
-open Utils
-open Coord
-open L
-
-#require "ppx_deriving.show";;
-let pf p f = P.parse_file p f |> R.get_exn;;
-#use "day12.ml";;

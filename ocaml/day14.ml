@@ -11,7 +11,7 @@ type robot = { mutable position : Coord.t; velocity : Coord.t }
 [@@deriving show]
 
 let mk_robot position velocity : robot = { position; velocity }
-let tiles = Coord.v 101 103
+let tiles = Coord.mk 101 103
 let center = Coord.(tiles /. 2)
 
 let update_pos robot =
@@ -28,12 +28,7 @@ let get_robots input =
 
 (* South East, clockwise *)
 let quadrants =
-  [
-    (( > ), ( > ));
-    (( < ), ( > ));
-    (( < ), ( < ));
-    (( > ), ( < ));
-  ]
+  [ (( > ), ( > )); (( < ), ( > )); (( < ), ( < )); (( > ), ( < )) ]
 
 let check_quadrants robots =
   let open L in

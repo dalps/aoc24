@@ -5,8 +5,8 @@ let p = P.(many @@ any_char)
 
 let parse s =
   let open L in
-  s |> P.parse_file p |> R.get_exn >|= CCChar.to_string >|= CCInt.of_string
-  |> keep_some
+  s |> data |> P.parse_file p |> R.get_exn >|= CCChar.to_string
+  >|= CCInt.of_string |> keep_some
 
 type block = E | I of int
 

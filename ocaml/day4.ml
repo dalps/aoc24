@@ -1,7 +1,4 @@
-module L = CCList
-module O = CCOption
-module P = CCParse
-module R = CCResult
+open Utils
 
 type dir_x = L | C | R
 type dir_y = T | C | B
@@ -89,7 +86,7 @@ let match_x_mas (p : coord) (board : char list list) =
 let p = P.(each_line (many any_char))
 
 let parse_board input =
-  P.parse_file p input |> Result.get_ok |> L.filter (fun l -> l <> [])
+  P.parse_file p (data input) |> Result.get_ok |> L.filter (fun l -> l <> [])
 
 let search1 (b : char list list) =
   let open L in

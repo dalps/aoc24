@@ -1,7 +1,4 @@
-module L = CCList
-module O = CCOption
-module P = CCParse
-module R = CCResult
+open Utils
 
 let pa = P.(many (both (U.int <* char '|') U.int))
 
@@ -32,5 +29,5 @@ let solve2 input_order input_pages =
   |> L.(map (fun ps -> nth_opt ps (length ps / 2)))
   |> L.keep_some |> L.fold_left ( + ) 0 |> return
 
-let assoc = P.parse_file pa "5a.txt" |> Result.get_ok
-let pages = P.parse_file pl "5b.txt" |> Result.get_ok
+let assoc = P.parse_file pa (data "5a.txt") |> Result.get_ok
+let pages = P.parse_file pl (data "5b.txt") |> Result.get_ok

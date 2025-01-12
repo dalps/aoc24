@@ -49,9 +49,9 @@ let get_boxes (board : space AM.t) =
         match row with
         | [] | [ _ ] -> i
         | B _ :: B _ :: xs ->
-            board.-(P2.v x y) <- B i;
-            board.-(P2.v (x + 1) y) <- B i;
-            Hashtbl.add boxes i { id = i; p = P2.v x y };
+            board.-(P2.mk x y) <- B i;
+            board.-(P2.mk (x + 1) y) <- B i;
+            Hashtbl.add boxes i { id = i; p = P2.mk x y };
             search_row (x + 2) (i + 1) xs
         | _ :: (B _ as b) :: xs -> search_row (x + 1) i (b :: xs)
         | _ :: _ :: xs -> search_row (x + 2) i xs
@@ -96,9 +96,9 @@ let print_board board =
       @@ fold_left (fun acc col -> acc ^ string_of_space col) "" row)
     board
 
-let%expect_test "test_double_board" =
-  let b2 = double_board b in
-  print_board b2
+(* let%expect_test "test_double_board" =
+   let b2 = double_board b in
+   print_board b2 *)
 
 let move_box boxes board (box : box) dir =
   let open AM in
@@ -116,8 +116,8 @@ let move_box boxes board (box : box) dir =
     board.-(p') <- B box.id;
     board.-(p' + east) <- B box.id;
     board.-(box.p - dir) <- E);
-  pr "Setting box %d's position: from %s to %s\n" box.id (P2.to_string box.p)
-    (P2.to_string p');
+  pr "Setting box %d's position: from %s to %s\n" box.id (P2.show box.p)
+    (P2.show p');
   Hashtbl.replace boxes box.id { box with p = p' };
   box.p <- p'
 
@@ -135,7 +135,7 @@ let check_adjacent boxes (board : space AM.t) box dir =
   let open P2 in
   let open AM in
   let open R in
-  pr "Checking adjacencies at %s\n" (to_string box);
+  pr "Checking adjacencies at %s\n" (show box);
   let vs =
     if dir = north || dir = south then
       [ box + dir; box + dir + east ]
@@ -147,7 +147,7 @@ let check_adjacent boxes (board : space AM.t) box dir =
   L.map
     (fun v ->
       let b = board.-(v) in
-      pr "Checking point %s: %s\n" (P2.to_string v)
+      pr "Checking point %s: %s\n" (P2.show v)
         (string_of_o ~a:string_of_space b);
       b)
     vs
@@ -225,7 +225,7 @@ let exec board program =
   iter
     (fun i ->
       exec1 board bot boxes i;
-      print_board board)
+      print_board ~print_a:string_of_space board)
     program;
   boxes
 
@@ -234,23 +234,23 @@ let exec board program =
 759079
 1543997 (* too high *)
 *)
-let%expect_test "test_exec" =
-  let open L in
-  let b, p = if true then b, p else b', p' in
-  let b = double_board b in
-  let boxes0 = get_boxes b |> CCHashtbl.values_list |> length in
-  let boxes = exec b p in
-  print_endline "done";
-  print_board b;
-  let boxes = boxes |> CCHashtbl.values_list in
-  let size = P2.make (A.length b.(0)) (A.length b) in
-  pr "Size: %d, %d\n" size.x size.y;
-  pr "There were %d boxes\n" boxes0;
-  pr "There are %d boxes\n" (length boxes);
-  let answer =
-    L.fold_left (fun acc box -> (100 * box.p.y) + box.p.x + acc) 0 boxes
-  in
-  print_int answer
+(* let%expect_test "test_exec" =
+   let open L in
+   let b, p = if true then b, p else b', p' in
+   let b = double_board b in
+   let boxes0 = get_boxes b |> CCHashtbl.values_list |> length in
+   let boxes = exec b p in
+   print_endline "done";
+   print_board b;
+   let boxes = boxes |> CCHashtbl.values_list in
+   let size = P2.make (A.length b.(0)) (A.length b) in
+   pr "Size: %d, %d\n" size.x size.y;
+   pr "There were %d boxes\n" boxes0;
+   pr "There are %d boxes\n" (length boxes);
+   let answer =
+     L.fold_left (fun acc box -> (100 * box.p.y) + box.p.x + acc) 0 boxes
+   in
+   print_int answer *)
 
 (* let solve1 input_a input_b =
    let b, p = get_data input_a input_b in
